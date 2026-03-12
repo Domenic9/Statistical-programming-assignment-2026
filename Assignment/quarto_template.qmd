@@ -1,0 +1,93 @@
+---
+title: "Assignment (Term Paper)"
+subtitle: "Statistical Programming, WS Term 2025/2026"
+format: pdf
+date: today
+date-format: long
+toc: false
+toc-depth: 3
+number-sections: false
+execute: 
+  eval: true
+  include: true
+  echo: true
+---
+
+::: {=latex}
+\begin{center}
+\textbf{Team Members:}
+\vspace{1cm}
+
+ Lennard Brügmann, 7963258 \\
+ \vspace{0.5cm}
+ Domenic Steuer, 7958637 \\
+
+\end{center}
+:::
+
+
+
+\clearpage
+
+# Assignment (Term Paper)
+
+## Section 1
+
+### Task 1
+```{python}
+# Example Python code for Section 1 Task 1
+
+print("Good Luck with your assignment!")
+
+```
+
+Example inline math $E = mc^2$ and display math:
+
+$$
+\int_{a}^{b} f(x) \, dx = F(b) - F(a)
+$$
+
+
+\clearpage
+
+## Section 2
+
+
+\clearpage
+
+## Section 3
+
+\clearpage
+
+
+# References
+
+...
+
+\clearpage
+
+# Appendix
+
+...
+
+\clearpage
+
+# Declaration of Authenticity
+
+> “We/I hereby certify that We/I have independently prepared the foregoing paper without external assistance and have not used any aids other than those indicated in the attached list. All passages taken verbatim or in substance from publications have been marked as such. Furthermore, We/I certify that We/I have not previously submitted this paper in any other examination procedure.”
+
+\vspace{2cm}
+
+**Place, Date, Signature (1)** _______________________________________
+
+\vspace{2cm}
+
+**Place, Date, Signature (2)** _______________________________________
+
+\vspace{2cm}
+
+**Place, Date, Signature (3)** _______________________________________
+
+\vspace{2cm}
+
+**Place, Date, Signature (4)** _______________________________________

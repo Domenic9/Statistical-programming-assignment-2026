@@ -1,0 +1,21 @@
+variable,description,type
+price,Nightly price in USD (format: '$XX.XX' — requires parsing),string/currency
+neighbourhood_cleansed,Berlin district (standardized by Inside Airbnb),categorical
+latitude,Listing latitude (WGS84),numeric
+longitude,Listing longitude (WGS84),numeric
+room_type,"Type of accommodation (Entire home/apt, Private room, etc.)",categorical
+bedrooms,Number of bedrooms (may contain NAs),numeric
+bathrooms_text,"Bathrooms description as text (e.g. '1 bath', '1.5 baths')",string
+accommodates,Maximum number of guests,numeric
+amenities,JSON list of amenities offered,JSON string
+host_since,Date host joined Airbnb (YYYY-MM-DD),date
+host_is_superhost,Whether host has Superhost status (t/f),boolean
+host_listings_count,Total number of active listings for this host,numeric
+host_response_rate,Percentage of inquiries host responds to,string/percent
+review_scores_rating,Overall review score (0-5),numeric
+review_scores_cleanliness,Cleanliness review score (0-5),numeric
+number_of_reviews,Total number of reviews,numeric
+reviews_per_month,Average reviews per month,numeric
+minimum_nights,Minimum night stay required,numeric
+availability_365,Number of available nights in next 365 days,numeric
+instant_bookable,Whether listing can be booked instantly (t/f),boolean
