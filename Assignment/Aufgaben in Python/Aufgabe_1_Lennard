@@ -1,0 +1,409 @@
+#%%
+#Imports
+# Standardbibliotheken
+import datetime as dt
+import json
+import math as m
+import random
+from functools import reduce
+from pathlib import Path
+
+# Datenverarbeitung & Finanzen
+import numpy as np
+import pandas as pd
+
+
+# Visualisierung
+import matplotlib.pyplot as plt
+import seaborn as sns
+import plotly.express as px
+from matplotlib.ticker import PercentFormatter
+
+# Statistik & Machine Learning (Sklearn & Statsmodels)
+import statsmodels.api as sm
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.pipeline import Pipeline
+from sklearn.linear_model import LogisticRegression, LassoCV
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.svm import SVC
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
+
+# Spezialisierte Tools
+from tabulate import tabulate
+from shapely.geometry import shape
+
+
+df_listings_berlin = pd.read_csv('listings_berlin.csv')
+
+# %%
+#Section 1
+#______________________________
+#Task 1 & 2
+# Load listings_berlin.csv into a pandas DataFrame. Report the number of observations and variables. For each column, compute the number and percentage of missing values.
+
+print(len(df_listings_berlin))
+df_listings_berlin.head(21)
+df_listings_berlin.info()
+df_listings_berlin.describe()
+
+missing_count = df_listings_berlin.isnull().sum()
+print(f"Number of missing values: {missing_count}")
+
+percent_missing = df_listings_berlin.isnull().sum()/len(df_listings_berlin) * 100
+
+print(percent_missing)
+
+# 2. Spalten mit 0% fehlenden Werten herausfiltern
+missing_pct_filtered = missing_count[missing_count > 0]
+
+# 3. Für eine bessere Übersicht absteigend sortieren
+missing_pct_filtered = missing_pct_filtered.sort_values(ascending=False)
+
+# 4. Den Graph erstellen
+plt.figure(figsize=(10, 6))
+sns.barplot(x=missing_pct_filtered.index, y=percent_missing[missing_pct_filtered.index], palette='magma')
+
+# Layout-Anpassungen
+plt.title('Prozentsatz fehlender Werte (nur Spalten mit Lücken)', fontsize=14)
+plt.ylabel('Fehlend in %', fontsize=12)
+plt.xlabel('Spaltenname', fontsize=12)
+plt.xticks(rotation=45) # Dreht die Beschriftung, falls die Namen lang sind
+plt.tight_layout()
+plt.show()
+
+
+# %%
+
+#Task 3
+df_listings_berlin['price'] = df_listings_berlin['price'].astype(str)
+df_listings_berlin.dropna(subset=['price'], inplace=True)
+
+df_listings_berlin['clean_price'] = (
+    df_listings_berlin['price']
+    .str.replace('$', '', regex=False)
+    .str.replace(',', '', regex=False)
+    .astype(float)
+)
+
+clean_price_2 = df_listings_berlin.dropna(subset=['clean_price'])
+clean_price_2 = df_listings_berlin[df_listings_berlin['clean_price'] > 0].copy()
+
+
+clean_price = pd.DataFrame({
+    'Original_String': df_listings_berlin['price'],
+    'Clean_Numeric': clean_price_2['clean_price']
+})
+
+
+clean_price.min()
+clean_price.max()
+clean_price.mean()
+clean_price.median()
+ 
+# %%
+
+#Task 4
+#bathrooms = df_listings_berlin['bathrooms_text'].str.replace('bath', '').str.replace('baths', '').str.replace(' shared', '').str.replace('s', '').astype(float)
+print(df_listings_berlin['bathrooms_text'].unique())
+df_listings_berlin['bathrooms_text']  = df_listings_berlin['bathrooms_text'].str.replace('shared bath','').str.replace('half bath','.5').str.replace('shared baths','').str.replace('private half-bath','0,5').str.replace('[^0-9.,]','',regex=True).replace(' ','0').replace(',','.')
+df_listings_berlin['bathrooms_text'] = pd.to_numeric(df_listings_berlin['bathrooms_text'], errors='coerce').fillna(0)
+print(df_listings_berlin['bathrooms_text'].head(10))
+
+# %%
+
+#Task 5
+print(df_listings_berlin[['host_is_superhost','instant_bookable']].head())
+superhost = (df_listings_berlin['host_is_superhost']).str.replace('t', 'True').str.replace('f', 'False').astype(bool)
+instant_bookable = (df_listings_berlin['instant_bookable']).str.replace('t', 'True').str.replace('f', 'False').astype(bool)
+print(superhost)
+print(instant_bookable)
+# %%
+
+
+print(df_listings_berlin['host_since'])
+time_since = pd.to_datetime(df_listings_berlin['host_since'])
+time_stamp = pd.Timestamp('2025-12-31')
+time_since = (time_stamp-time_since).dt.days/365
+print(time_since)
+#host_since = 2025 - pd.to_numeric(df_listings_berlin['host_tenure_years‘)]
+# %%
+
+#Task 6_1
+print(clean_price.describe())
+df_clean_price = df_listings_berlin[['clean_price']]
+sns.displot(df_clean_price, x="clean_price", bins=1000,  binwidth=10)
+plt.title('Distribution of Prices')
+plt.xlabel('Price in €')
+
+plt.ylabel('Frequency')
+# %%
+
+#Task 6_2
+print(clean_price.describe())
+df_clean_price = df_listings_berlin[['clean_price']]
+sns.displot(df_clean_price, x='clean_price', bins=50,  binwidth=10,)
+plt.title('Distribution of Prices')
+plt.xlabel('Price in €')
+plt.ylabel('Frequency')
+
+plt.xscale('log')
+plt.show()
+# %%
+
+
+#Task 6_3
+df_clean_price = df_listings_berlin[['clean_price']]
+sns.displot(df_clean_price, x="clean_price", kde='kde')
+plt.title('Distribution of Prices')
+plt.xlabel('Price in €')
+plt.ylabel('Frequency')
+# %%
+
+#Task 6_4
+df_clean_price = df_listings_berlin[['clean_price']]
+sns.displot(df_clean_price, x="clean_price", kde='kde',log_scale=True)
+plt.title('Distribution of Prices')
+plt.xlabel('Price in €')
+plt.ylabel('Frequency')
+
+# %%
+#Task 7
+#print(df_listings_berlin['neighbourhood_cleansed'].head())
+#print(df_listings_berlin['neighbourhood_cleansed'].describe())
+#print(neighbourhood_counts)
+df_listings_berlin['price'] = clean_price['Clean_Numeric']
+neighbourhood_counts = (
+    df_listings_berlin.groupby('neighbourhood_cleansed')['price']
+    .agg(['median', 'count'])
+    .reset_index()
+)
+
+neighbourhood_counts.columns = ['Neighborhood', 'Median Price', 'Count']
+neighbourhood_counts = neighbourhood_counts.sort_values(by='Median Price', ascending=False)
+
+
+header = ['Neighborhood', 'Count', 'Median Price']
+neighbourhood_counts = neighbourhood_counts.sort_values(by='Median Price', ascending=False)
+header = ['Neighborhood', 'Median Price (€)', 'Anzahl Inserate']
+print(tabulate(neighbourhood_counts.head(5), headers=header, tablefmt='grid'))
+
+unique_prices = df_listings_berlin['price'].unique()
+print( unique_prices)
+# %%
+
+#Task 8
+clean_price = df_listings_berlin['clean_price'].dropna().astype(int)
+def trimmed_mean(x, pct):
+    lower_bound = np.percentile(x,pct)
+    upper_bound = np.percentile(x,100-pct)
+    return x[(x>=lower_bound) & (x<=upper_bound)].mean()
+
+print(trimmed_mean(clean_price, 5))
+print(clean_price.mean())
+# %%
+
+#Task 9
+df_listings_berlin['price'] = pd.to_numeric(df_listings_berlin['price'], errors='coerce')
+df_listings_berlin['price'] = df_listings_berlin['price'].sort_values(ascending=False)
+fig = px.scatter(
+    df_listings_berlin, 
+    x='bathrooms_text', 
+    y='price', 
+    color='price',
+    title='Zusammenhang zwischen Anzahl der Bäder und Preis',
+    labels={'bathrooms_text': 'Anzahl Badezimmer', 'price': 'Price in €'}
+)
+fig.update_yaxes(
+    type='log',
+    tick0=0,
+    dtick=100,
+    visible=True, 
+    showticklabels=True, 
+    showline=True
+)
+fig.show()
+# %%
+
+#Task 10
+df_listings_berlin['price'] = pd.to_numeric(df_listings_berlin['price'], errors='coerce')
+df_listings_berlin['price'] = df_listings_berlin['price'].sort_values(ascending=False)
+fig = px.scatter(
+    df_listings_berlin, 
+    x='bedrooms', 
+    y='price', 
+    color='price',
+    title='Zusammenhang zwischen Anzahl der Schlafzimmer und Preis',
+    labels={'bedrooms': 'Anzahl Schlafzimmer', 'price': 'Price in €'}
+)
+fig.update_yaxes(
+    type='log',
+    tick0=0,
+    dtick=100,
+    visible=True, 
+    showticklabels=True, 
+    showline=True
+)
+fig.show()
+
+# %%
+df_listings_berlin['review_scores_rating'] = df_listings_berlin[['review_scores_rating']].clip(lower=1).round(0).dropna()
+fig = px.box(df_listings_berlin, 
+            x='review_scores_rating',
+            y='review_scores_cleanliness',
+            title='Boxplot der Bewertungen',
+            color='review_scores_rating',
+            labels={
+                'review_scores_rating': 'Gesamtbewertung (gerundet)',
+                'review_scores_cleanliness': 'Sauberkeits-Score (0-5)'
+            }
+)
+
+fig.show()
+
+# %%
+
+#Task 11
+with open("berlin_bezirke.geojson", "r", encoding="utf-8") as f:
+    berlin_geojson = json.load(f)
+
+geo_data_list = []
+for feature in berlin_geojson["features"]:
+    geo_data_list.append({
+        "raw_name": feature["properties"]["BZR_NAME"],
+        "geometry": feature["geometry"]
+    })
+
+def clean_names(series):
+    return (series.astype(str)
+            .str.replace('str.', 'straße', regex=False)
+            .str.replace('Alt-', '', regex=False)
+            .str.replace('Alt', '', regex=False)
+            .str.replace('Süd', '', regex=False)
+            .str.replace('Nord', '', regex=False)
+            .str.replace('West', '', regex=False)
+            .str.replace('Ost', '', regex=False)
+            .str.replace('alt', '', regex=False)
+            .str.replace('süd', '', regex=False)
+            .str.replace('nord', '', regex=False)
+            .str.replace('west', '', regex=False)
+            .str.replace('ost', '', regex=False)
+            .str.replace('Nördliche', '', regex=False)
+            .str.replace('nördliche', '', regex=False)
+            .str.replace('stadt', '', regex=False)
+            .str.replace('1 - ', '', regex=False)
+            .str.replace('2 - ', '', regex=False)
+            .str.replace('3 - ', '', regex=False)
+            .str.replace('4 - ', '', regex=False)
+            .str.replace('5 - ', '', regex=False)
+            .str.replace('-', '', regex=False)
+            .str.replace(' ', '', regex=False)
+            .str.replace('sß', 'ß', regex=False)
+            .str.replace('1', 'Frohnau/Hermsdorf', regex=False)
+            .str.replace('2', 'Waidmannslust/Wittenau/Lübars', regex=False)
+            .str.replace('3', 'Borsigwalde/FreieScholle', regex=False)
+            .str.replace('4', 'AugusteViktoriaAllee', regex=False)
+            .str.replace('5', 'Tegel', regex=False)
+            .str.replace('Kölln.', 'Köllnische', regex=False)
+            .str.replace('f.', 'feld', regex=False)
+            .str.replace('/Kantstraße', '', regex=False)
+            .str.replace('Kantstraße', 'OttoSuhrAllee', regex=False)
+            .str.replace('/Hessenwinkel', '', regex=False)
+            .str.replace('Hessenwinkel', 'Rahnsdorf', regex=False)
+            .str.replace('Neue', '', regex=False)
+            .str.replace('/Flughafensee', '', regex=False)
+            .str.replace('Waidmannslust/Wittenau/Lübars', '', regex=False)
+            .str.replace('Frohnau/Hermsdorf', '', regex=False)
+            .str.replace('/Karolinenhof/Rauchfangswerder', '', regex=False)
+            .str.replace('SchlossCharlottenburg', 'SchloßCharlottenburg', regex=False)
+            .str.replace('liche', '', regex=False)
+            .str.strip())
+
+df_listings_berlin['neighbourhood_cleansed'] = clean_names(df_listings_berlin['neighbourhood_cleansed'])
+geo_df = pd.DataFrame(geo_data_list)
+geo_df['clean_name'] = clean_names(geo_df['raw_name'])
+geo_coord_map = dict(zip(geo_df['clean_name'], geo_df['geometry']))
+
+korrekturen = {'Fridenau': 'Friedenau', 'Treptow': 'AltTreptow'}
+for s, z in korrekturen.items():
+    df_listings_berlin['neighbourhood_cleansed'] = df_listings_berlin['neighbourhood_cleansed'].replace(s, z, regex=True)
+    geo_df['clean_name'] = geo_df['clean_name'].replace(s, z, regex=True)
+
+set_berlin = set(df_listings_berlin['neighbourhood_cleansed'].unique())
+set_geojson = set(geo_df['clean_name'].unique())
+match_list = sorted(list(set_berlin.intersection(set_geojson)))
+
+def apply_fuzzy_match(current_set, reference_matches, target_df, col_name):
+    only_list = current_set - set(reference_matches)
+    for unsauber in only_list:
+        if len(unsauber) >= 5:
+            for offiziell in reference_matches:
+                if unsauber in offiziell or offiziell in unsauber:
+                    target_df.loc[target_df[col_name] == unsauber, col_name] = offiziell
+                    break
+
+apply_fuzzy_match(set_berlin, match_list, df_listings_berlin, 'neighbourhood_cleansed')
+apply_fuzzy_match(set_geojson, match_list, geo_df, 'clean_name')
+
+final_berlin_names = set(df_listings_berlin['neighbourhood_cleansed'].unique())
+final_geojson_names = set(geo_df['clean_name'].unique())
+match_list = sorted(list(final_berlin_names.intersection(final_geojson_names)))
+only_berlin = sorted(list(final_berlin_names - final_geojson_names))
+only_geojson = sorted(list(final_geojson_names - final_berlin_names))
+
+df_listings_berlin['geometry'] = df_listings_berlin['neighbourhood_cleansed'].map(geo_coord_map)
+
+max_len = max(len(match_list), len(only_berlin), len(only_geojson))
+df_Bezirke = pd.DataFrame({
+    'Match': match_list + [None] * (max_len - len(match_list)),
+    'Only in df_berlin': only_berlin + [None] * (max_len - len(only_berlin)),
+    'Only in GeoJSON': only_geojson + [None] * (max_len - len(only_geojson))
+})
+
+for col in df_Bezirke.columns:
+    df_Bezirke[col] = df_Bezirke[col].sort_values(ascending=True, na_position='last').values
+
+print(tabulate(df_Bezirke, headers='keys', tablefmt='grid', showindex=False))  
+
+stats_per_district = df_listings_berlin.groupby('neighbourhood_cleansed').agg(
+    avg_price=('price', 'mean'),
+    listing_count=('price', 'count'),
+    geometry=('geometry', 'first')
+).reset_index()
+
+points_data = []
+for _, row in stats_per_district.iterrows():
+    if row['geometry']:
+        poly = shape(row['geometry'])
+        centroid = poly.centroid
+        points_data.append({
+            'Bezirk': row['neighbourhood_cleansed'],
+            'lat': centroid.y,
+            'lon': centroid.x,
+            'Durchschnittspreis': round(row['avg_price'], 2),
+            'Anzahl Inserate': row['listing_count']
+        })
+
+df_points = pd.DataFrame(points_data)
+
+fig = px.scatter_mapbox(
+    df_points,
+    lat="lat",
+    lon="lon",
+    hover_name="Bezirk",
+    color="Durchschnittspreis",
+    size="Anzahl Inserate",
+    hover_data={"lat": False, "lon": False, "Durchschnittspreis": True, "Anzahl Inserate": True},
+    color_continuous_scale=px.colors.sequential.Viridis,
+    zoom=9.33,
+    height=600,
+    title="Berlin: Durchschnittspreis und Anzahl der Inserate nach Bezirken"
+)
+
+fig.update_layout(
+    mapbox_style="carto-positron",
+    margin={"r":0,"t":40,"l":0,"b":0}
+)
+
+fig.show()
